@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    ports:
+      - ${WEB_PORT:-10080}:80
+    volumes:
+      - ./backend/nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+    depends_on:
+      - app
+
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/python/Dockerfile
+      args:
+        - APP_USER=appuser
+        - APP_HOME=/home/appuser/code
+    command: gunicorn --config=/home/appuser/gunicorn.conf.py wsgi:application
+    expose:
+      - 8000
+    volumes:
+      - ./backend/code:/home/appuser/code
+      - ./backend/python/gunicorn.conf.py:/home/appuser/gunicorn.conf.py
+    environment:
+      - DB_CONNECTION=postgres
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_NAME:-masonite_dev}
+      - DB_USERNAME=${DB_USER:-masonite_dev}
+      - DB_PASSWORD=${DB_PASS:-secret}
+    depends_on:
+      - db
+
+  db:
+    build:
+      context: .
+      dockerfile: ./docker/postgresql/Dockerfile
+    ports:
+      - ${DB_PORT:-5432}:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${DB_USER:-masonite_dev}
+      - POSTGRES_PASSWORD=${DB_PASS:-secret}
+      - POSTGRES_DB=${DB_NAME:-masonite_dev}
+
+volumes:
+  postgres_data:

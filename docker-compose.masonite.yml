@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  masonite:
+    build:
+      context: .
+      dockerfile: ./docker/masonite/Dockerfile
+    image: masonite
+    volumes:
+      - ./backend/code:/backend/code
+
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/python/Dockerfile
+  #   volumes:
+  #     - ./backend/code:/backend/code
+  #   depends_on:
+  #     - masonite
